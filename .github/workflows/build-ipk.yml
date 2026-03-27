@@ -1,0 +1,187 @@
+name: Build IPK
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches: [master]
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      is_release: ${{ steps.info.outputs.is_release }}
+      version: ${{ steps.info.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Compute build info
+        id: info
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+            echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            LATEST_TAG=$(git describe --tags --match 'v*' --abbrev=0 2>/dev/null || echo "v0.0.0")
+            echo "version=${LATEST_TAG#v}_git~${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Build (${{ matrix.target }})
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86-64
+            sdk_url_path: x86/64
+          - target: mediatek-filogic
+            sdk_url_path: mediatek/filogic
+
+    env:
+      OPENWRT_VERSION: "23.05.5"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gawk unzip file wget python3 rsync
+
+      - name: Download OpenWrt SDK
+        run: |
+          SDK_BASE_URL="https://downloads.openwrt.org/releases/${{ env.OPENWRT_VERSION }}/targets/${{ matrix.sdk_url_path }}"
+          SDK_FILE=$(wget -qO- "${SDK_BASE_URL}/sha256sums" | grep -oP 'openwrt-sdk-[^\s*]+(?=\.tar\.(xz|zst))' | head -1)
+
+          if wget -q --spider "${SDK_BASE_URL}/${SDK_FILE}.tar.xz" 2>/dev/null; then
+            wget -q "${SDK_BASE_URL}/${SDK_FILE}.tar.xz"
+            tar xf "${SDK_FILE}.tar.xz"
+          else
+            wget -q "${SDK_BASE_URL}/${SDK_FILE}.tar.zst"
+            sudo apt-get install -y zstd
+            zstd -d "${SDK_FILE}.tar.zst" -o "${SDK_FILE}.tar"
+            tar xf "${SDK_FILE}.tar"
+          fi
+
+          if [ ! -d "sdk" ]; then
+            SDK_DIR=$(ls -d openwrt-sdk-* 2>/dev/null | head -1)
+            [ -n "$SDK_DIR" ] && mv "$SDK_DIR" sdk
+          fi
+
+      - name: Prepare package source
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          sed -i "s/PKG_VERSION:=.*/PKG_VERSION:=${VERSION}/" Makefile
+
+          mkdir -p sdk/package/luci-app-hysteria
+          cp -r Makefile htdocs po root sdk/package/luci-app-hysteria/
+
+          # Stub so the SDK can resolve the dependency without building hysteria
+          mkdir -p sdk/package/hysteria2-ppp
+          printf '%s\n' \
+            'include $(TOPDIR)/rules.mk' \
+            'PKG_NAME:=hysteria2-ppp' \
+            'PKG_VERSION:=0.0.0' \
+            'PKG_RELEASE:=1' \
+            'include $(INCLUDE_DIR)/package.mk' \
+            'define Package/hysteria2-ppp' \
+            '  SECTION:=net' \
+            '  CATEGORY:=Network' \
+            '  TITLE:=hysteria2-ppp (stub)' \
+            '  VERSION:=$(PKG_VERSION)-$(PKG_RELEASE)' \
+            'endef' \
+            'define Build/Compile' \
+            'endef' \
+            'define Package/hysteria2-ppp/install' \
+            '	true' \
+            'endef' \
+            '$(eval $(call BuildPackage,hysteria2-ppp))' \
+            > sdk/package/hysteria2-ppp/Makefile
+
+      - name: Update feeds
+        working-directory: sdk
+        run: |
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Build package
+        working-directory: sdk
+        run: |
+          make defconfig
+          make package/luci-app-hysteria/compile V=s 2>&1 | tee build.log
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then
+            echo "::error::Build failed"
+            tail -50 build.log
+            exit 1
+          fi
+
+      - name: Collect IPK
+        id: collect
+        run: |
+          mkdir -p output
+          find sdk/bin/ -name 'luci-app-hysteria*.ipk' -exec cp {} output/ \;
+          ls -la output/
+          echo "ipk_count=$(ls output/*.ipk 2>/dev/null | wc -l)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifact
+        if: steps.collect.outputs.ipk_count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: luci-app-hysteria-${{ matrix.target }}
+          path: output/*.ipk
+          retention-days: 14
+
+  release:
+    name: Publish release
+    needs: [prepare, build]
+    if: needs.prepare.outputs.is_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Collect all IPKs
+        run: |
+          mkdir -p release
+          find artifacts -name '*.ipk' -exec cp {} release/ \;
+          ls -la release/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "${{ github.ref_name }}"
+          generate_release_notes: true
+          files: release/*.ipk
+
+  cleanup:
+    name: Cleanup old runs
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    permissions:
+      actions: write
+
+    steps:
+      - name: Delete old workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 30
+          keep_minimum_runs: 5
