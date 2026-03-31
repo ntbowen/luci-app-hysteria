@@ -2,28 +2,17 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-hysteria
 PKG_VERSION:=1.0.0
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=luunarrr
 
-include $(INCLUDE_DIR)/package.mk
+LUCI_TITLE:=LuCI support for Hysteria2 PPP VPN
+LUCI_DESCRIPTION:=LuCI web interface for configuring Hysteria2 as a PPP VPN client.
+LUCI_DEPENDS:=+luci-base +hysteria2-ppp +ppp +jsonfilter
+LUCI_PKGARCH:=all
 
-define Package/luci-app-hysteria
-  SECTION:=luci
-  CATEGORY:=LuCI
-  SUBMENU:=3. Applications
-  TITLE:=LuCI support for Hysteria2 PPP VPN
-  PKGARCH:=all
-  DEPENDS:=+luci-base +hysteria2-ppp +ppp +jsonfilter
-endef
-
-define Package/luci-app-hysteria/description
-  LuCI web interface for configuring Hysteria2 as a PPP VPN client.
-endef
-
-define Build/Compile
-endef
+include $(TOPDIR)/feeds/luci/luci.mk
 
 define Package/luci-app-hysteria/install
 	$(INSTALL_DIR) $(1)/usr/share/luci/menu.d

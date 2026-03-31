@@ -1,0 +1,192 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: luci-app-hysteria\n"
+"POT-Creation-Date: 2026-03-31 15:00+0800\n"
+"PO-Revision-Date: 2026-03-31 15:00+0800\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: zh_Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Hysteria2"
+msgstr "Hysteria2"
+
+msgid "Hysteria2 PPP VPN client configuration."
+msgstr "Hysteria2 PPP VPN 客户端配置。"
+
+msgid "Service"
+msgstr "服务"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "Custom config file"
+msgstr "自定义配置文件"
+
+msgid "Path to a raw YAML config file. Leave empty to use the settings below."
+msgstr "原始 YAML 配置文件的路径。留空以使用以下设置。"
+
+msgid "Server Connection"
+msgstr "服务器连接"
+
+msgid "Server address"
+msgstr "服务器地址"
+
+msgid "Authentication"
+msgstr "认证"
+
+msgid "Password for server authentication."
+msgstr "服务器认证密码。"
+
+msgid "TLS SNI"
+msgstr "TLS SNI"
+
+msgid "Server Name Indication. Auto-detected from server address if empty."
+msgstr "服务器名称指示。如果为空则从服务器地址自动检测。"
+
+msgid "Skip TLS verification"
+msgstr "跳过 TLS 验证"
+
+msgid "Disable certificate verification. Not recommended for production use."
+msgstr "禁用证书验证。不建议在生产环境中使用。"
+
+msgid "TLS certificate pin"
+msgstr "TLS 证书固定"
+
+msgid "SHA-256 hash of the server certificate for pinning."
+msgstr "用于固定的服务器证书的 SHA-256 哈希。"
+
+msgid "Custom CA certificate"
+msgstr "自定义 CA 证书"
+
+msgid "Path to a custom CA certificate file."
+msgstr "自定义 CA 证书文件的路径。"
+
+msgid "Upload bandwidth"
+msgstr "上传带宽"
+
+msgid "Download bandwidth"
+msgstr "下载带宽"
+
+msgid "Obfuscation type"
+msgstr "混淆类型"
+
+msgid "None"
+msgstr "无"
+
+msgid "Salamander"
+msgstr "Salamander"
+
+msgid "Obfuscation password"
+msgstr "混淆密码"
+
+msgid "Port hopping interval"
+msgstr "端口跳跃间隔"
+
+msgid "Interval for UDP port hopping. Leave empty to disable."
+msgstr "UDP 端口跳跃间隔。留空以禁用。"
+
+msgid "Fast Open"
+msgstr "快速打开"
+
+msgid "Accept connections immediately without waiting for server acknowledgement."
+msgstr "立即接受连接，无需等待服务器确认。"
+
+msgid "Lazy mode"
+msgstr "懒人模式"
+
+msgid "Only connect to the server when data arrives."
+msgstr "仅在数据到达时连接到服务器。"
+
+msgid "Camouflage"
+msgstr "伪装"
+
+msgid "Enable camouflage"
+msgstr "启用伪装"
+
+msgid "Obfuscate QUIC connection IDs using a pre-shared key."
+msgstr "使用预共享密钥混淆 QUIC 连接 ID。"
+
+msgid "Pre-shared key"
+msgstr "预共享密钥"
+
+msgid "Base64-encoded pre-shared key for QUIC DCID generation."
+msgstr "用于 QUIC DCID 生成的 Base64 编码预共享密钥。"
+
+msgid "Server IP"
+msgstr "服务器 IP"
+
+msgid "Real server IP address for camouflage DCID generation."
+msgstr "用于伪装 DCID 生成的真实服务器 IP 地址。"
+
+msgid "PPP Settings"
+msgstr "PPP 设置"
+
+msgid "PPP over Hysteria2 tunnel configuration."
+msgstr "基于 Hysteria2 隧道的 PPP 配置。"
+
+msgid "PPP Client"
+msgstr "PPP 客户端"
+
+msgid "Enable PPP"
+msgstr "启用 PPP"
+
+msgid "MTU"
+msgstr "MTU"
+
+msgid "Maximum transmission unit. Leave empty for auto-detection (range: 576-1500). Auto-detection accounts for QUIC, UDP, and obfuscation overhead."
+msgstr "最大传输单元。留空以自动检测（范围：576-1500）。自动检测会考虑 QUIC、UDP 和混淆开销。"
+
+msgid "auto"
+msgstr "自动"
+
+msgid "pppd path"
+msgstr "pppd 路径"
+
+msgid "Path to the pppd executable."
+msgstr "pppd 可执行文件的路径。"
+
+msgid "pppd arguments"
+msgstr "pppd 参数"
+
+msgid "Custom arguments for pppd. Leave empty to use hysteria defaults (nodetach, local, +ipv6, multilink, lcp-echo-interval 0). Only set if you need to override."
+msgstr "pppd 的自定义参数。留空以使用 hysteria 默认值（nodetach, local, +ipv6, multilink, lcp-echo-interval 0）。仅在需要覆盖时设置。"
+
+msgid "Data streams"
+msgstr "数据流"
+
+msgid "Number of parallel QUIC streams. 0 uses datagram mode (recommended for most setups). Values greater than 0 enable multilink mode with that many streams."
+msgstr "并行 QUIC 流的数量。0 使用数据报模式（推荐用于大多数设置）。大于 0 的值启用具有该数量流的多链路模式。"
+
+msgid "Running"
+msgstr "运行中"
+
+msgid "Stopped"
+msgstr "已停止"
+
+msgid "Service status"
+msgstr "服务状态"
+
+msgid "PID"
+msgstr "PID"
+
+msgid "Hysteria2 Status"
+msgstr "Hysteria2 状态"
+
+msgid "Service"
+msgstr "服务"
+
+msgid "Log"
+msgstr "日志"
+
+msgid "General"
+msgstr "常规"
+
+msgid "Status"
+msgstr "状态"
+
+msgid "PPP"
+msgstr "PPP"
